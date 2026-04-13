@@ -1,0 +1,455 @@
+<!DOCTYPE html><html lang="en"><head><base href="/69b96874a6252bab6d955c39-preview/"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content=""><title>Landing</title><link rel="icon" href="https://stdigitalmvmtdev001.blob.core.windows.net/assets/develop/favicon.ico" type="image/x-icon"><script>
+sessionStorage.setItem("test", true);
+
+const ALLOWED_AFFILIATE_IDS = [];
+
+let nextPageSlug = null;
+
+function handleUrlParams(params) {
+  const specialParams = ["p_dc", "p_tenbucksoff", "p_freeship", "p_freegift"];
+  const allowedDcValues = ["5", "10", "15", "20", "25"];
+  const currentAffId = params.get("affid") || sessionStorage.getItem("affid");
+  const discountsAllowed =
+    ALLOWED_AFFILIATE_IDS.length === 0 ||
+    (currentAffId !== null && ALLOWED_AFFILIATE_IDS.includes(currentAffId));
+  if (!discountsAllowed) {
+    specialParams.forEach((key) => sessionStorage.removeItem(key));
+  }
+  params.forEach((value, key) => {
+    const paramKey = `p_${key}`;
+    if (!sessionStorage.getItem(paramKey) && specialParams.includes(paramKey)) {
+      if (!discountsAllowed) return;
+      if (paramKey === "p_dc" && !allowedDcValues.includes(value)) return;
+      sessionStorage.setItem(paramKey, value);
+    } else {
+      sessionStorage.setItem(key, value);
+    }
+  });
+}
+
+if (localStorage.getItem('sK_r')) {
+  const cr = JSON.parse(localStorage.getItem('sK_r'));
+  const normalizePath = (rawPath) => {
+    if (!rawPath) return '';
+    try {
+      let p = String(rawPath);
+      p = p.split('?')[0].split('#')[0];
+      p = p.replace(/\/+$/, '');
+      p = p.replace(/\/index.html$/, '');
+      p = p.replace(/^\/+/, ''); p = p.replace(/^69b96874a6252bab6d955c39-preview\/?/, '');
+      return p;
+    } catch (e) {
+      console.error('Error normalizing path', e);
+      return '';
+    }
+  };
+  const pathname = window.location.pathname;
+  const cp = normalizePath(pathname || '/');
+  let nr = cr.find((r) => r.page === cp);
+  if (nr) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const baseNext = pathname.endsWith("/index.html") ? nr.next + "/index.html" : nr.next || '';
+    const withQuery = urlParams && urlParams.toString()
+      ? baseNext + '?' + urlParams.toString()
+      : baseNext;
+    nextPageSlug = withQuery && !withQuery.startsWith('/') ? '/69b96874a6252bab6d955c39-preview/' + withQuery : withQuery;
+    handleUrlParams(urlParams);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      MVMT.init('69b96874a6252bab6d955c39', 'LandingPage')
+      const ctaButtons = document.querySelectorAll("[data-cta-button]");
+      ctaButtons.forEach((button) => {
+        button.href = nextPageSlug;
+        button.addEventListener("click", (e) => {
+          e.preventDefault();
+          MVMT.track("CTA_CLICK", {
+            page: "Landing",
+            page_type: "LandingPage",
+            page_url: window.location.href,
+          });
+          window.location.href = nextPageSlug;
+        });
+      });
+    });
+  }
+  
+}
+
+const route = async () => {
+  if (localStorage.getItem('sK_r')) return JSON.parse(localStorage.getItem('sK_r'));
+  const sessionId = MVMT.getSessionId() || localStorage.getItem("mvmt_session_id") || "";
+  const url = 'https://func-ab-test-events-dev-001.azurewebsites.net/api/checkRoute?id=69b96874a6252bab6d955c39&v=177607314074713&sessionId='+sessionId;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    localStorage.setItem('sK_r', JSON.stringify(data));
+    return data;
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+    throw error;
+  }
+}
+const nextPage = async () => {
+  let cr = await route();
+  if (!cr) throw new Error('Route not found');
+  const normalizePath = (rawPath) => {
+    if (!rawPath) return '';
+    try {
+      let p = String(rawPath);
+      p = p.split('?')[0].split('#')[0];
+      p = p.replace(/\/+$/, '');
+      p = p.replace(/\/index.html$/, '');
+      p = p.replace(/^\/+/, ''); p = p.replace(/^69b96874a6252bab6d955c39-preview\/?/, '');
+      return p;
+    } catch (e) {
+      console.error('Error normalizing path', e);
+      return '';
+    }
+  };
+  const pathname = window.location.pathname;
+  const cp = normalizePath(pathname || '/');
+  let nr = cr.find((r) => r.page === cp);
+  if (!nr) {
+    try {
+      localStorage.removeItem('sK_r');
+    } catch (e) {
+      // ignore storage errors
+    }
+    cr = await route();
+    if (!cr) return '';
+    nr = cr.find((r) => r.page === cp);
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!nr) return '';
+  const baseNext = pathname.endsWith("/index.html") ? nr.next + "/index.html" : nr.next || '';
+  const withQuery = urlParams && urlParams.toString()
+    ? baseNext + '?' + urlParams.toString()
+    : baseNext;
+  const absolute = withQuery && !withQuery.startsWith('/') ? '/69b96874a6252bab6d955c39-preview/' + withQuery : withQuery;
+  return absolute;
+}
+const urlParams = new URLSearchParams(window.location.search);
+urlParams.forEach((value, key) => {
+  sessionStorage.setItem(key, value);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("click", (event) => {
+    const elementClasses = event.target.className;
+    const elementId = event.target.id;
+
+    const windowPosition = window.scrollY;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const elementPosition = event.clientX;
+    const elementTop = event.clientY;
+
+    MVMT.track("PAGE_CLICK", {
+      page: "Landing",
+      page_type: "LandingPage",
+      page_url: window.location.href,
+      element_classes: elementClasses,
+      element_id: elementId,
+      window_position: windowPosition,
+      window_width: windowWidth,
+      window_height: windowHeight,
+      element_position: elementPosition,
+      element_top: elementTop,
+    });
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const elementsToHideSelectors = Array.from(params.entries()).reduce((selectors, [key, value]) => {
+      if (value === "n" || value === "none") {
+          selectors.push(`[data-url-param-${key}]`);
+      }
+      return selectors;
+  }, []);
+  if (elementsToHideSelectors.length) {
+      document.querySelectorAll(elementsToHideSelectors.join(",")).forEach(el => el.style.display = "none");
+  }
+  const topBanner = document.querySelector("[data-url-param-colorbanner]");
+  if (topBanner && params.has("colorbanner")) topBanner.style.backgroundColor = params.get("colorbanner") || "red";
+});
+
+const getGlobals = async () => {
+  const response = await fetch("https://stdigitalmvmtdev001.blob.core.windows.net/globals/develop/default");
+  const data = await response.json();
+  return data;
+};
+
+document.addEventListener("DOMContentLoaded", async() => {
+
+  if (nextPageSlug === null || nextPageSlug.length === 0) {
+    nextPageSlug = await nextPage();
+    const ctaButtons = document.querySelectorAll("[data-cta-button]");
+    ctaButtons.forEach((button) => {
+      button.href = nextPageSlug;
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        MVMT.track("CTA_CLICK", {
+          page: "Landing",
+          page_type: "LandingPage",
+          page_url: window.location.href,
+        });
+        window.location.href = nextPageSlug;
+      });
+    });
+  }
+    
+  const globals = await getGlobals();
+  const globalAttribute = "data-holder-global"
+  const globalElements = document.querySelectorAll(`[${globalAttribute}]`);
+  if (globalElements) {
+    globalElements.forEach((element) => {
+      const data = globals[element.getAttribute(globalAttribute)];
+      element.innerText = data.label;
+      if (data.type === "url") {
+        element.href = data.src;
+      }
+    })
+  }
+
+  // Track all elements with data-sparqcms-component-id on page view
+  const sparqcmsComponentElements = document.querySelectorAll("[data-sparqcms-component-id]");
+  const componentIds = [];
+  sparqcmsComponentElements.forEach(element => {
+    componentIds.push(element.getAttribute("data-sparqcms-component-id"));
+  });
+  
+  if (componentIds.length > 0) {
+      MVMT.track("PAGE_VIEW_COMPONENTS", {
+      page: "Landing",
+      page_type: "LandingPage",
+      page_url: window.location.href,
+      component_ids: componentIds
+    });
+  }
+});
+  
+  </script>
+<script>
+  const offerName = ', Vi';
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    'event': 'pageView', 
+    'offer': ', Vi',
+    'customer_id':sessionStorage.getItem("customerId") || undefined,
+    'page':{
+      'type':'LandingPage',
+      'isReload':performance.getEntriesByType("navigation")[0].type === "reload",
+      'isExclude':false
+    },
+    'experiment':{
+      'id':undefined,
+      'name':undefined,
+      'variation':undefined
+    }
+  });
+</script>
+  <link rel="stylesheet" href="styles/landing.css" /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"><style>@layer imported{@media (max-width: 640px) {
+  .review-section {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  }
+}}</style><style>@layer imported{@media (max-width: 640px) {
+  .review {
+  flex: 1 0 75%;
+  scroll-snap-align: start;
+  }
+}}</style><style>@layer imported{body {
+  font-family: sans-serif;
+}
+.has-bg-image > img {
+  z-index: -1 !important;
+}}</style><style>@layer imported{.transition-all {
+  transition: all ease 500ms
+}}</style><style>@layer imported{.active-tab {
+  border-color: #3b3b3bff;
+  border-bottom-width: 8px;
+  border-style: solid;
+}}</style></head><body><div><div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s cjqhchq cey0ojg c-aop3ja c-b1u9qq ctduf03 c-crbsvi"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s czdvyn4 c-i9vfpo c-evftdq c-aop3ja c-b1u9qq c-crbsvi"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-aop3ja c-b1u9qq c-cr8lxv ctdxlxq c-msh9t cybj5fe c-ywhsvs c-jp5aks"><span class="c-n92bdn">DON'T MISS:&nbsp;</span><span class="c-n92bdn cybkfeg crm7udh">Up to 50% OFF</span><span class="c-n92bdn">&nbsp;Ends Soon!</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-iwza5u c-hou3zo cnkzvdv cc325bb"><img src="assets/vital-logo.webp" alt="Image header" class="c-i5f2jc ciy5p6b c-d7jzl0 c-4au6wl ceuu77c c-75arrj" id="1" loading="lazy"/><a class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s cjti641 cix1h02 c1t50ar c-evftdq cmqxkp4 cnvwugc cckgi1k c-468i9h cfr8k07" data-next-page=""><span class="c-n92bdn c-mb8mk cybjsex">ORDER NOW</span></a></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja cck0jdd c-crbsvi ctduf03"><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-4aoy6u cbuk2vp c-ohjtqh ckyhy7i c-ehlcw8"><img src="assets/bg-hero-mobile.jpg" class="c-hi7sxz cjmgjye c-d7jzl0 cn1rrfe cfjmd47" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-xi84yw c-jolhzf c-vf9b1s cblmt4n c-q05l3p c-xejivg co9kv5w cnq2eaf c6tnw1b c-e4pwfg c-e6ag5p ctx81rz clwgcr8 c3ov9m3 c-raas7n c-eq3qka c7bxrnk c-kw7drg cbnjt0v cgx1jrw"><span class="c-n92bdn">Vital Health Ring:</span><span class="c-n92bdn">Your Personal Guide to a</span><span class="c-n92bdn c-934jyi cskku62">Better, Longer Life</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c-x8zsop c-eq3qka c-ohjtqh cbun9tc cbuyoha ckyhy7i"><img src="assets/rating-star.svg" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp6kju ctvprw4">Rated Excellent Based on 2000+ Reviews</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-xi84yw cblm654 c1kzpo2 c4c5p2s c-u1v3qb c6tnw1b c-e4pwfg c-kw7drg cc55100 cceynma cbnjt0v"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c4c5p2s c-x8zsop c-eq3qka c3rm8kw cbun9tc cbuyoha c-ohjtqh ckyhy7i cbnjt0v"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp6kju ctvohx2 c-e6bq4r clwgcr8">Improves sleep quality</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c4c5p2s c-x8zsop cbun9tc cbuyoha c-ohjtqh ckyhy7i c3rm8kw cbnjt0v"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp6kju ctvohx2 c-e6bq4r clwgcr8">Waterproof for worry-free wear.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c4c5p2s c-x8zsop c-eq3qka c3rm8kw cbun9tc cbuyoha c-ohjtqh ckyhy7i cbnjt0v"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp6kju ctvohx2 c-e6bq4r clwgcr8">Records distance, pace, duration, and calorie burn.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c4c5p2s c-x8zsop c-eq3qka c3rm8kw cbun9tc cbuyoha c-ohjtqh ckyhy7i"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp6kju ctvohx2 c-e6bq4r clwgcr8">Efficiently measures blood oxygen saturation.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c4c5p2s c-x8zsop c-eq3qka c3rm8kw cbun9tc cbuyoha c-ohjtqh ckyhy7i"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp6kju ctvohx2 c-e6bq4r clwgcr8">Tracks heart rate changes in real-time.</span></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s cw8uyhy c7e7cj7"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-drxck4 cilvkds cbuyoha"><img src="assets/dotted.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c-6s5fkd ctujf64 c2yn23a cjyj6jl c-q05l3p ch1vua5 c-u1v3qb cbllj5l c49flim c-x8zsop c-d6dh92 cbuk2vp cbuvhjn cm9rzw2 cah1ymz c-ioryhn cbnjt0v c-iucpq2"><img src="assets/fire.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-jp5xkb cn9uk2p c-e6bq4r">Seling Fast: 182 Rings Solds In The Last Hour</span></div></div><button class="c-lc9846 c-oaxxat cevei02 c-rri4mx cju698t c-jaytv5 c-sc1q4l c-z1rj74 ccdkvsh cgt2htg cwzv3pd cey0ojg cmtuajo ch8wzy4 c-i9vfpo c-evftdq c7l9c6s c-4au6wl c-z3x91n c-mb5epe c-2jhazy c-jovpae cz4834m cx533lz ca2zacb cai6sxh"><span class="c-m9yni cz02kxo c-v947c4 cybjsex csdhym c-kjaowh ckx71ul cblmt4n c-rcmi12 c37snoh c-e6b358 cmmlwk5">Save 50% Now</span><img src="assets/arrow-sm-right-svgrepo-com.svg" class="c-i8nx4x ciw0frg c-d7jzl0 cmtuajo ctfmc74 cnci0qd c-gbz1e9 c-masg8f c-y1dfkd c-xsq6az" loading="lazy"/></button><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c7l9c6s cvtftzx c-xejivg c-kiu8gm cuhz3h5 ch5xfw4 cbun9tc cbuyoha"><img src="assets/pseudo.webp" alt="Image header" class="c-hu1iqn c6hn9im c-d7jzl0 c7jol5v cmg5l7e" id="1" loading="lazy"/><span class="c-fi10o0 cn9uk2p">Ships by 22nd December</span><img src="assets/time.webp" alt="Image header" class="c-i8o5k1 ciw07cc c-d7jzl0 c-wdpes c-cdsh3t c-r4mxbe c7j4ski" id="1" loading="lazy"/><span class="c-fi10o0 cn9uk2p">Stock: Only Vital Health Rings Left!</span></div></div></div></div></div><div class="has-bg-image c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-bvy04g c-al9uo2 cqb26y9 c-chr53o cnvgvs5 c-evftdq c-i9vfpo c-468i9h cfr8k07 c3erww5 c-ohjtqh ckyhy7i cbuk2vp cbuvhjn relative"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n4ynq c-ix1u3y c-crbsvi ctduf03 cnvgvs5 cck0jdd"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq cybkfeg c-la7dy cxmodm7 c-aop3ja c-b1u9qq"><span class="c-n92bdn">Rival Hearing Aid<br></span><span class="c-n92bdn c-efurur">Your Personal Guide to a</span><span class="c-n92bdn cd9ux5h">Better, Longer Life</span><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-orcywl c-lbx363 c-crbsvi c-aolwln c-b1r2t3 ctduf03"><img src="assets/rating-star.svg" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-mtr8v">Rated Excellent Based on 2000+ Reviews</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-orcywl c-lbx363 c-aolwln c-b1r2t3"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn cybjsex">Improves sleep quality.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-orcywl c-lbx363 c-aolwln c-b1r2t3"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn cybjsex">Waterproof for worry-free wear.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-orcywl c-lbx363 c-aolwln c-b1r2t3"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn cybjsex">Records distance, pace, duration, and calorie burn.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-orcywl c-aolwln c-b1r2t3 c-lbx363"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn cybjsex">Efficiently measures blood oxygen saturation.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-orcywl c-lbx363 c-aolwln c-b1r2t3"><img src="assets/green-checkbox-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn cybjsex">Tracks heart rate changes in real-time.</span></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx cw8uyhy c-aop3ja c-b1u9qq c7e7cj7"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-b1r2t3 c-4au6wl c-aop3ja c-crbsvi ctduf03"><img src="assets/dotted.webp" class="c-hi7sxz cjmgjye c-d7jzl0 c-4au6wl c-oaxxat c7l9c6s" loading="lazy"/><img src="assets/fire.webp" class="c-hi7sxz cjmgjye c-d7jzl0 ctfmc74 c-v7886v c-6p5ker c-n3n0o5 cr5nmbs" loading="lazy"/><span class="c-n92bdn ctfmc74 c-6p5l5g c-v784he c-msh9t cybkfeg c-n3n0o5 cr5nll3">Selling Fast: 182 Rings Sold In The Last Hour</span></div><a class="c-lc9846 c-oaxxat cevei02 c-rri4mx cjti641 c-jaytv5 c-sc1q4l c-z1rj74 ccdkvsh cgt2htg cwzv3pd cey0ojg cmtuajo ch8wzy4 c-i9vfpo c-evftdq c7l9c6s c-4au6wl c-z3x91n c-mb5epe ca9vwz4 cai6sxh" data-cta-button=""><span class="c-eocicr cey0ojg c-v947c4 cybjsex csdhym czcgne2 cuw8hbr cmmlwk5">Save 50% Now</span><img src="assets/arrow-sm-right-svgrepo-com.svg" class="c-i8nx4x ciw0frg c-d7jzl0 cmtuajo ctfmc74 cnci0qd c-mb5epe ca9vwz4" loading="lazy"/></a><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c7l9c6s cvceul9"><img src="assets/pseudo.webp" alt="Image header" class="c-wel8t5 c-82wgjw c-d7jzl0" id="1" loading="lazy"/><span class="c-fi10o0">Ships by 22nd December</span><img src="assets/time.webp" alt="Image header" class="c-wel8t5 c6hn9im c-d7jzl0 c-wdpes" id="1" loading="lazy"/><span class="c-fi10o0">Stock: Only 58 Vital Health Rings Left!</span></div></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctfmc74 c-v76907 cb3kfe6 ctdwbyo"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq cb447zj c-aop3ja c-b1u9qq c-crbsvi c-i9vfpo cfvxcbd c-rph80o"><img src="assets/Vector%20(1).png" class="c-hi7sxz cjmgjye c-d7jzl0 cg2m57e cw8bebp" loading="lazy"/><span class="cmyac1f cybkfeg c-mdsko">High Battery <br>Capacity</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq cb447zj c-aop3ja c-b1u9qq c-crbsvi c-i9vfpo cfvxcbd c-rph80o"><img src="assets/Group%201968.png" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="cmyac1f cybkfeg c-mdsko">Heart Rate <br>Tracker</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-aop3ja c-b1u9qq c-crbsvi cb447zj c-i9vfpo cfvxcbd c-rph80o"><img src="assets/Vector%20(2).png" class="c-hi7sxz cjmgjye c-d7jzl0 c-rp8xgd cs0nmbk cesj42b" loading="lazy"/><span class="cmyac1f cybkfeg c-mdsko">Blood Oxygen<br>Tracker</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-aop3ja c-b1u9qq c-crbsvi cb447zj c-i9vfpo"><img src="assets/Group.png" class="c-hi7sxz cjmgjye c-d7jzl0 cesh73q" loading="lazy"/><span class="cmyac1f cybkfeg c-mdsko">Sleep Score <br>Tracker</span></div></div><img src="assets/bg-hero.webp" width="1920" height="1080" alt="" style='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;' loading="eager" /></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx ci2ps3n cey0ojg c7l9c6s c-4au6wl c-aop3ja c-b1u9qq c-cr8lxv ctdxlxq c-i9vfpo"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo"><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-evftdq c-5pdfmv c-i9vfpo"><span class="c-taweo cy87lb c-n92bdn c-i9vfpo c-9n9du0">24/7 Monitoring When You Need</span><span class="cy87lb c-n92bdn c-taweo c-i9vfpo c-jo49c6 c-pxb7sl c-o5s3sm c-kd3imu c-panc6b cq341an cdmzfcp">It Most!</span><span class="c-n92bdn c-rgjo0h c-i9vfpo c95vq9l c-obno21">With Vital Health Ring, you can now have an affordable and convenient way to</span><span class="c-rgjo0h c-n92bdn c-i9vfpo c-joo1xj">monitor your everyday activity no matter where you go.</span><div class="has-bg-image c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-4aoy6u cxb7ayx c7e7cj7 c6tnw1b cbnjt0v cfms42u c-raas7n cfmg3kd relative"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-468i9h cfr8k07"></div><img src="assets/circle-background.png" width="1170" height="563" alt="" style='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;' loading="eager" /></div><div class="has-bg-image c-lc9846 c-oaxxat cevei02 c-rri4mx c-ic30jh c-i9vfpo c-4au6wl cruql2s c-aop3ja c-b1u9qq c-crbsvi ctduf03 c7l9c6s c49eq3z c-raas7n cc325bb cuhz3h5 c3ov9m3 cxdfp48 cfr8k07 c-4tzle5 c-qcahlu cq341an ce70i7a ct493ta relative"><img src="assets/e75dd1d252ed0be0b0d0c469a95c1a15.png" alt="Image header" class="c2q4nwf ch9aw5u ctfmc74 c-8296gu c-468i9h cfr8k07 c-n3n0o5 c-2evcpy ciguv c-aftkga c-4qph0j" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-chr53o c-crbsvi cfkvrkt c-vlvq64 c-468i9h cqclhmw c9dzy6s"><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-orcywl cunjefk c-lbx363 c7l9c6s"><img src="assets/98efa0057e362228a7f6786758ca80c0.png" alt="Image header" class="c-d7jzl0 c-i5efjt ciz9xck" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctdxlxq"><span class="cey0ojg c-taweo c-mcilm cg22cm1 c-jp3dm7">Blood Oxygen Monitor</span></div><span class="">The blood oxygen reader monitors</span><span class="cmyac1f">your oxygen levels for improved</span><span class="cmyac1f">health and fitness. Breathe easy!</span></div></div><img src="assets/grey-divider.png" alt="Image header" class="c2bu0h1 c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-orcywl c7l9c6s c-fkrzmt cunjefk c-lbx363"><img src="assets/e639d71011b8ff4496d186f7cf93c1fa.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctdxlxq"><span class="c-taweo c-mcilm cey0ojg cunjefk c-fkrzmt c-jp3dm7">Heart Rate Tracker</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="cmyac1f">The heart rate tracker monitors your</span><span class="cmyac1f">heart rate for improved fitness and</span><span class="cmyac1f">health and fitness. Breathe easy!</span></div></div></div><img src="assets/grey-divider.png" alt="Image header" class="c2bu0h1 c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-orcywl c7l9c6s c-fkrzmt cunjefk c-lbx363 cm86xmz"><img src="assets/0012df116668a66fe51ac18c36f58d54.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="cey0ojg c-taweo c-mcilm cunjefk c-jp3dm7">Blood Pressure Monitor</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="">The blood pressure monitor tracks</span><span class="c-n92bdn">your blood pressure for improved&nbsp;</span><span class="c-n92bdn">health and wellness. Take control</span><span class="c-n92bdn">of your health!</span></div></div></div><img src="assets/grey-divider.png" alt="Image header" class="c2bu0h1 c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-lbx363 cpf4zja c-crbsvi c4c5p2s c-6s5fkd c-7hadx2 c1kzpo2 c-ohjtqh"><img src="assets/6c594cd706b0046bf3b0b2377851a282.png" class="c-i5efjt ciz9xck c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-o6hhdg c-jp5aks cblmt4n c6yq6k4">Sleep Monitoring &amp; Analysis</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="c-n92bdn c-mcilm cybkfeg c-jp3dm7 c-468i9h">Sleep Monitoring &amp; Analysis</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="c-n92bdn">The sleep monitoring feature tracks</span><span class="c-n92bdn">your sleep patterns and encourages</span><span class="c-n92bdn c8cprm">healthy habits. Wake up feeling refreshed!</span></div></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx ctduf03 cun148d cfkvrkt c-vlvq59 c-6s5fkd c-468i9h cqclhnr c9dzy6s c-ohjtqh caeym6p"><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-eo19am c7l9c6s cunjefk c-lbx363 ctduf03 cnvgvs5 cck0jdd c-7hadx2 c2uop3j c7e7cj7 c-eq3qka cm86xmz"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-crbsvi ctduf03 c-b1u9qq c-xi84yw cqclhmw c-e4pwfg"><span class="cunjefk c-taweo c-mcilm cey0ojg c4496a6 czcdggf">Daily Step Counter</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-crbsvi c-b1u9qq ctduf03 c-xi84yw"><span class="">The daily step counter tracks physical&nbsp;</span><span class="c-n92bdn">activity and encourages movement.</span></div></div><img src="assets/d04833a86ed255856e188955e5dd6c8d.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0" id="1" loading="lazy"/></div><img src="assets/grey-divider.png" alt="Image header" class="c2aqfab c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-eo19am c7l9c6s c-fkrzmt cunjefk c-lbx363 ctduf03 c-7hadx2 c2uop3j c-eq3qka cm86xmz"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw cqclhmw c-e4pwfg"><span class="cunjefk c-taweo c-mcilm cey0ojg c-jp3dm7">Body Temperature</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw c-e4pwfg"><span class="">The body temperature reader</span><span class="c-n92bdn">provides easy health monitoring and</span><span class="c-n92bdn">potential illness detection. Stay</span><span class="c-n92bdn">healthy and safe!</span></div></div><img src="assets/34b75aae4607948082f7778a6465b317.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0" id="1" loading="lazy"/></div><img src="assets/grey-divider.png" alt="Image header" class="c2aqfab c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-eo19am c7l9c6s c-lbx363 ctduf03 cpt06az c-ycda8e c-7hadx2 c2uop3j c-1vttgr c-eq3qka cm86xmz"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctdwyy7 c-xi84yw cqclhmw c-e4pwfg"><span class="cunjefk c-taweo c-mcilm cey0ojg czcdggf">Calorie Burn Counter</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw c-e4pwfg"><span class="">The calorie burn counter tracks</span><span class="c-n92bdn">activity and encourages a healthy</span><span class="c-n92bdn">lifestyle. Take control of your fitness!</span></div></div><img src="assets/664c56a6682db9b24d21310cd55ad0c4.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0" id="1" loading="lazy"/></div><img src="assets/grey-divider.png" alt="Image header" class="c2aqfab c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq cpf4zja c-lbx363 c-eo19am ctduf03 c-7hadx2 c-eq3qka c-ohjtqh"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw cqclhmw c-e4pwfg"><span class="c-n92bdn c-mcilm cybkfeg">Stress Monitoring</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-b1u9qq c-aop3ja c-crbsvi ctduf03 c-xi84yw c-e4pwfg"><span class="c-n92bdn">Recognize stressful moments and</span><span class="c-n92bdn">resilience to manage</span><span class="c-n92bdn">ongoing stress effectively.</span></div></div><img src="assets/93e3e975493ea12981649397ad22e1a6.png" class="c-i5efjt ciz9xck c-d7jzl0" loading="lazy"/></div></div><img src="assets/circle-background.png" width="1170" height="563" alt="" style='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;' loading="eager" /></div></div><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c6yq6k4 c-q05l3p c-6s5fkd c1kzpo2 c6tnw1b cbnjt0v cfms42u"><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-chr53o c-crbsvi c-vlvq64 c1kzpo2 cqclhmw c9dzy6s"><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-orcywl cunjefk c-lbx363 c7l9c6s c-xi84yw c-e4pwfg"><img src="assets/98efa0057e362228a7f6786758ca80c0.png" alt="Image header" class="c-d7jzl0 c-i5efjt ciz9xck c7i3a4n cxcukom" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctdxlxq c-xempt3 c-xi84yw"><span class="">The blood oxygen reader monitors</span><span class="cmyac1f">your oxygen levels for improved</span><span class="cmyac1f">health and fitness. Breathe easy!</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-jp5xkb"><span class="cey0ojg c-taweo c-mcilm cg22cm1 c-jp2qmo">Blood Oxygen Monitor</span></div></div><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-orcywl c7l9c6s c-fkrzmt cunjefk c-lbx363 c-xi84yw c1kzpo2 c-e4pwfg"><img src="assets/e639d71011b8ff4496d186f7cf93c1fa.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctdxlxq"><span class="c-taweo c-mcilm cey0ojg cunjefk c-fkrzmt c-jp2qmo">Heart Rate Tracker</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-jp5xkb"><span class="cmyac1f">The heart rate tracker monitors your</span><span class="cmyac1f">heart rate for improved fitness and</span><span class="cmyac1f">health and fitness. Breathe easy!</span></div></div></div><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-orcywl c7l9c6s c-fkrzmt cunjefk c-lbx363 c-xi84yw cm86xmz c-e4pwfg"><img src="assets/0012df116668a66fe51ac18c36f58d54.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="cey0ojg c-taweo c-mcilm cunjefk c-jp2qmo">Blood Pressure Monitor</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-jp5xkb"><span class="">The blood pressure monitor tracks</span><span class="c-n92bdn">your blood pressure for improved&nbsp;</span><span class="c-n92bdn">health and wellness. Take control</span><span class="c-n92bdn">of your health!</span></div></div></div><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-lbx363 cpf4zja c-crbsvi c4c5p2s c-6s5fkd c-7hadx2 c1kzpo2 c-xi84yw c-ohjtqh c-e4pwfg"><img src="assets/6c594cd706b0046bf3b0b2377851a282.png" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-jp40lq"><span class="c-n92bdn c-mcilm cybkfeg c-jp3dm7 c-468i9h">Sleep Monitoring &amp; Analysis</span><span class="c-n92bdn c-o6hhdg c-jp40lq cblmt4n c6yq6k4">Sleep Monitoring &amp; Analysis</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-jp6kju"><span class="c-n92bdn">The sleep monitoring feature tracks</span><span class="c-n92bdn">your sleep patterns and encourages</span><span class="c-n92bdn c8cprm">healthy habits. Wake up feeling refreshed!</span></div></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx ctduf03 cun148d c-vlvq59 c-6s5fkd cqclhnr c9dzy6s c-ohjtqh caeym6p cbuk2vp"><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja cg5xyqi c-mvrujb" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-eo19am c7l9c6s cunjefk c-lbx363 ctduf03 cnvgvs5 cck0jdd c-7hadx2 c2uop3j c7e7cj7 c-eq3qka cm86xmz"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-crbsvi ctduf03 c-b1u9qq c-xi84yw c-vlvq64 cqclhmw c-e4pwfg"><span class="cunjefk c-taweo c-mcilm cey0ojg c4496a6 c-jp2qmo">Daily Step Counter</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-crbsvi c-b1u9qq ctduf03 c-xi84yw c-jp5xkb"><span class="">The daily step counter tracks physical&nbsp;</span><span class="c-n92bdn">activity and encourages movement.</span></div></div><img src="assets/d04833a86ed255856e188955e5dd6c8d.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" id="1" loading="lazy"/></div><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-eo19am c7l9c6s c-fkrzmt cunjefk c-lbx363 ctduf03 c-7hadx2 c2uop3j c-xi84yw c-eq3qka cm86xmz c-e4pwfg"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw c-vlvq64 cqclhmw c-e4pwfg"><span class="cunjefk c-taweo c-mcilm cey0ojg c-jp2qmo">Body Temperature</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw c-jp5aks c-e4pwfg"><span class="">The body temperature reader</span><span class="c-n92bdn">provides easy health monitoring and</span><span class="c-n92bdn">potential illness detection. Stay</span><span class="c-n92bdn">healthy and safe!</span></div></div><img src="assets/34b75aae4607948082f7778a6465b317.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" id="1" loading="lazy"/></div><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx cpf4zja c-eo19am c7l9c6s c-lbx363 ctduf03 cpt06az c-ycda8e c-7hadx2 c2uop3j c-xi84yw c-eq3qka cm86xmz c-e4pwfg"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctdwyy7 c-xi84yw c-vlvq64 cqclhmw c-e4pwfg"><span class="cunjefk c-taweo c-mcilm cey0ojg c-jp2qmo">Calorie Burn Counter</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw c-jp5xkb c-e4pwfg"><span class="">The calorie burn counter tracks</span><span class="c-n92bdn">activity and encourages a healthy</span><span class="c-n92bdn">lifestyle. Take control of your fitness!</span></div></div><img src="assets/664c56a6682db9b24d21310cd55ad0c4.png" alt="Image header" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" id="1" loading="lazy"/></div><img src="assets/grey-divider.png" alt="Image header" class="c-hi7sxz c-85nfip c-d7jzl0 c-jdpsty cpf4zja" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq cpf4zja c-lbx363 c-eo19am ctduf03 c-7hadx2 c-xi84yw c-6s5fkd c-eq3qka c-ohjtqh c-e4pwfg"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-xi84yw c-vlvq64 cqclhmw c-e4pwfg"><span class="c-n92bdn c-mcilm cybkfeg c-jp2qmo">Stress Monitoring</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-rya3y8 c-3n63zq c-b1u9qq c-aop3ja c-crbsvi ctduf03 c-xi84yw c-jp5xkb c-e4pwfg"><span class="c-n92bdn">Recognize stressful moments and</span><span class="c-n92bdn">resilience to manage</span><span class="c-n92bdn">ongoing stress effectively.</span></div></div><img src="assets/93e3e975493ea12981649397ad22e1a6.png" class="c-i5efjt ciz9xck c-d7jzl0 c7i3a4n cxcukom" loading="lazy"/></div></div></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-evftdq ci72iim"><span class="c-n92bdn c-taweo c-la7dy cxmodm7 c-lhaqr8">Subscription-Free Vital Health Ring App</span><span class="c-n92bdn">Meet the future of health tracking in this sleek and sophisticated design.</span><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-evftdq c7l9c6s c7y4ib6 c-raas7n cuhz3h5 cqclhm1"><img src="assets/key-point-section-wake-up-img.webp" alt="Image header" class="c2xm6av c-91yqvx c-d7jzl0 c9wf4dc cqclhm1" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s c-mb4rpv cmptzie c1uyk8l c-vlvq64 cqclhmw"><span class="cxmodm7 c-taweo c-ltzzb c-jokuzw cjz719g">Invest in the Energy You Need for Tomorrow</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="c-msh9t c-468i9h">Track your sleep stages and REM to identify sleep patterns, and optimize&nbsp;</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">Track your sleep stages and REM to identify sleep patterns, and optimize&nbsp;your bedtime</span><span class="c-n92bdn c-o6hhdg c8cprm c-jp2qmo c6yq6k4">routine to wake up feeling refreshed and energized.</span><span class="c-n92bdn c-msh9t c8cprm c-468i9h">your bedtime routine to wake up feeling refreshed and energized.</span></div></div></div><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-evftdq c7l9c6s c7y4ib6 c-k1hfkf c-raas7n"><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s c-mb4rpv cmptzie c1uyk8l c-vlvq64 cqclhmw"><span class="c-taweo cxmodm7 c-ltzzb c-jokuzw cjz719g">Optimize Your Fitness Routine</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4"><span style="font-size: 18px; text-align: start;">Monitor heart rate, calories burned, and activity levels to optimize your&nbsp;</span>performance,</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">prevent injuries, and achieve your fitness goals faster.</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq ctduf03 c-crbsvi"><span class="c-msh9t c-468i9h">Monitor heart rate, calories burned, and activity levels to optimize your</span><span class="c-n92bdn c-msh9t c-468i9h">performance, prevent injuries, and achieve your fitness goals faster.</span></div></div><img src="assets/key-point-section-fitness-goals-img.webp" alt="Image header" class="c2xm6av c-91yqvx c-d7jzl0 c9wf4dc" id="1" loading="lazy"/></div><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-evftdq c7l9c6s c7y4ib6"><img src="assets/key-point-section-stress.webp" alt="Image header" class="c2bu0h1 c-91yqvx c-d7jzl0 c9wf4dc cfdyeng" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s c-mb4rpv cmptzie c1uyk8l c-vlvq64 cqclhmw"><span class="c-taweo c-ltzzb cxmodm7 c-jokuzw">Listen to Your Heart</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-aojzn2 c-b1u9qq c-crbsvi c-xi84yw"><span class="c-n92bdn c-msh9t c8cprm c-468i9h">Track your stress by monitoring heart rate variability to spot</span><span class="c-n92bdn c-msh9t c8cprm c-468i9h">patterns and triggers. Use stress-reducing techniques to boost</span><span class="c-n92bdn c-msh9t c8cprm c-468i9h">your mental health and well-being.</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">Track your stress by monitoring heart rate variability to spot patterns</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">patterns and triggers. Use stress-reducing techniques to boost&nbsp;your mental&nbsp;health&nbsp;and</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm">well-being.</span></div></div></div><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-evftdq c7l9c6s c7y4ib6 c-k1hfkf c-raas7n"><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-mb4rpv c1uyk8l cmptzie c7l9c6s c-k1hfkf c-vlvq64 cqclhmw"><span class="c-taweo c-ltzzb cxmodm7 c-jokuzw">Learn Your Monthly Patterns</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq"><span class="c-msh9t c8cprm c-468i9h">For women, understanding and tracking menstrual cycle is crucial.</span><span class="c-n92bdn c-msh9t c8cprm c-468i9h">Monitor cycle patterns, ovulation, and other reproductive health</span><span class="c-n92bdn c-msh9t c8cprm c-468i9h">indicators to optimize comfortability and minimize pain.</span><span class="c-n92bdn c-o6hhdg c8cprm c-jp2qmo c6yq6k4">For women, understanding and tracking menstrual cycle is crucial. Monitor&nbsp;</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">cycle patterns, ovulation, and other reproductive health&nbsp;indicators to</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">optimize comfortability and minimize pain.</span></div></div><img src="assets/key-point-section-body-cicle-img.webp" alt="Image header" class="c2bu0h1 c-91yqvx c-d7jzl0 c9wf4dc" id="1" loading="lazy"/></div><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c-evftdq c7l9c6s c7y4ib6"><img src="assets/key-point-section-data-confidence-img.webp" alt="Image header" class="c2bu0h1 c-91yqvx c-d7jzl0 c9wf4dc" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s c-mb4rpv cmptzie c1uyk8l c-vlvq64 cqclhmw"><span class="c-taweo c-ltzzb cxmodm7 c-jokuzw">Connect with Your Healthcare Provider</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq"><span class="c-msh9t c-468i9h">Sharing valuable data with your healthcare provider can help</span><span class="c-n92bdn c-msh9t c-468i9h">with diagnosis, treatment plans and creating preventative measures,</span><span class="c-n92bdn c-msh9t c-468i9h">&nbsp;giving you the best quality of life possible.</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">Sharing valuable data with your healthcare provider can help&nbsp;with diagnosis,&nbsp;</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">treatment plans and creating preventative measures,&nbsp;&nbsp;giving you the</span><span class="c-n92bdn c-o6hhdg c-jp2qmo c8cprm c6yq6k4">&nbsp;best quality of life possible.</span></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s cw8uyhy c7e7cj7 c-6s5fkd c1kzpo2 c-4aoy6u"><button class="c-lc9846 c-oaxxat cevei02 c-rri4mx cjti641 c-jaytv5 c-sc1q4l c-z1rj74 ccdkvsh cgt2htg cwzv3pd cey0ojg cmtuajo ch8wzy4 c-i9vfpo c-evftdq c7l9c6s c-4au6wl c-kfiytm c-mb5epe ca9vwz4 c-4aoy6u c8plow cguwjkm cfms42u cai6sxh" data-cta-button=""><span class="c-ls30q cey0ojg c-v947c4 cybkfeg csdhym c-jolhzf ctwo96m cmmlwk5">Save 50% Now</span><img src="assets/arrow-sm-right-svgrepo-com.svg" class="c-i8nx4x ciw0frg c-d7jzl0 c-6khkbl ctfmc74 cnci0qd c-mb5epe ca9vwz4" loading="lazy"/></button><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c7l9c6s cvtftzx c-6s5fkd c1kzpo2 c-4aoy6u cf9qybc cfms42u"><img src="assets/pseudo.webp" alt="Image header" class="c-hu1iqn c6hn9im c-d7jzl0 c6yq6k4" id="1" loading="lazy"/><span class="c-fi10o0">Ships by 22nd December</span><img src="assets/time.webp" alt="Image header" class="c-we1g7s c6iqupc c-d7jzl0 c-wdpes" id="1" loading="lazy"/><span class="c-fi10o0">Stock: Only 58 Vital Health Rings Left!</span></div></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s cjqhchq cey0ojg"><span class="c-n92bdn cybkfeg c-kqesl ccl1klz c-jokuzw c2yqw0g ctwrg49">How to Use the Vital Health Ring</span><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-i9vfpo c-orcywl c-89lnp3 ctun93a c-6s5fkd c1kzpo2 c-jp40lq"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq cnwiykp c-b1u9qq c-crbsvi c-cg59pr c-4au6wl"><video src="assets/-eae0-4fcc-8b9f-1bb8f3c0b57c.mp4" class="c-i951cv cix1l2g c-d7jzl0 c7e7cj7 cxa4crq c6tnw1b" loading="lazy"></video><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-ujz3i2 c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-i6gz6l ciy7dps cwt9b2m c-evftdq ctfmc74 c-ds6frl c5h72b3 cpyh34d c7h20gx cxbtb0w c-ioryhn c3z3w7t"><span class="c-n92bdn c-ko39l cybhvgc c-jni57t">01</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 cb447zj c-y3xmfn c-d6x9uf"><span class="c-n92bdn c-l70gb c-jokuzw ctwrg49">Get Started</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-maln1 c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-jp2qmo ctw5qkb"><span class="c-n92bdn c8cprm">Open the app and follow the on-screen</span><span class="c-n92bdn c8cprm">instructions to pair your Vital Health Ring.</span></div></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-i9vfpo c-v83pc c-eo19am c-89lnp3 cck0jdd c-xempt3 c2yqw0g c-6s5fkd c1kzpo2 c-eq3qka"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03 cb447zj c-y3xmfn c-vlvq64 c-d6x9uf cqclhmw"><span class="c-n92bdn cybiifv c-l70gb c-jokuzw ctwrg49">Wear Your Ring</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq ctduf03 c-crbsvi c-md5l5 c-jp2qmo c8cprm ctw5qkb"><span class="c-n92bdn c8cprm">For optimal accuracy, wear the ring on your non-dominant</span><span class="c-n92bdn c8cprm">hand and wear consistently for accurate readings.</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq cnwiykp cuo370x c-4au6wl cr8hj72"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-ujz3i2 c-i6gz6l ciy7dps cwt9b2m c-evftdq c-ko39l cybhvgc ctfmc74 cr8hj7x c5h72b3 c-v76uqy c7h20gx cxbtb0w c-jni57t c-ioryhn c3z3w7t"><span class="c-n92bdn">02</span></div><video src="assets/-896c-47a4-b6c8-b2db76bdf195.mp4" class="c-i951cv cix1l2g c-d7jzl0 cxa4crq c7e7cj7 c-ehlcw8 c6tnw1b" loading="lazy"></video></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-3n63zq c-i9vfpo c-orcywl c-89lnp3 cnvgvs5 c-xempt3 c-6s5fkd c1kzpo2"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq cnwiykp c-cgp2b4 c-4au6wl"><video src="assets/-5276-41ac-9f78-85697e3d8b25.mp4" class="c-i951cv cix1l2g c-d7jzl0 c7e7cj7 cxa4crq c6tnw1b" loading="lazy"></video><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-ujz3i2 cwt9b2m c-i6gz6l ciy7dps c-evftdq c-ko39l ctfmc74 c5h72b3 cpyh34d cybhvgc c7h20gx cxbtb0w c-jni57t c-ioryhn c3z3w7t"><span class="c-n92bdn">03</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="c-n92bdn c-l70gb c-jokuzw ctwrg49">Open the App</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-3n63zq c-aop3ja c-crbsvi c-b1u9qq c-maln1 c-jp2qmo c8cprm ctw5qkb"><span class="c-n92bdn c8cprm">View your daily, weekly, and monthly health</span><span class="c-n92bdn c8cprm">summaries and share your data with other users</span><span class="c-n92bdn">&nbsp;and healthcare professionals.</span></div></div></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera cnx0fn2 cclk38a ctduf03 c-crbsvi c-4au6wl"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-iwzu6l c-b1u9qq c8q8of"><span class="c-n92bdn c-l70gb c-jokuzw ctwu02d">Experience New Levels of Wellness</span><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-4aoy6u c7e7cj7 c5ebccj c-xempt3 c-kixfe9 c-6s5fkd c1kzpo2 c-gornvp cp2h98 c6tnw1b cbuvhjn c-ohjtqh ckyhy7i c-s6pdy9 c-asv8tc c-x8zsop c-fydbuh c-e4pwfg cfms42u"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c8psd5 c5ebccj c-xempt3 c-6s5fkd c-kisyhk c1kzpo2 cxds8az c-googy2 cp2h98 c9e0nee c-x8zsop c-fydbuh c-s6kx1k cbuvw42 c-asv8tc cbuk2vp c-ohjtqh ckyhy7i"><img src="assets/Vector%206.png" class="c-hi7sxz cjmgjye c-d7jzl0 c6uc908" loading="lazy"/><span class="c-n92bdn c-lwomrx ctw4gl9 c-e6ag5p c-s6q0xs c-asv8tc cbuvhjn c-ohjtqh c-wd0zyt">Wake Up Refreshed</span></div><img src="assets/Vector%205.png" class="c-hi7sxz cjmgjye c-d7jzl0 c6uc908" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo c-hou3zo c-b1u9qq cfvwpbu cx9qugr c-468i9h cfr8k07"><span class="active-tab c-n92bdn c-mb8mk cybkfeg cx9qugr ccjwpg7 cfvw2cb" data-tab-for="benefit-1">Wake Up Refreshed</span><span class="c-n92bdn c-mb8mk cybjsex ccjwpg7" data-tab-for="benefit-2">Get Active</span><span class="c-n92bdn c-mb8mk cybjsex ccjwpg7" data-tab-for="benefit-3">Stay Informed</span><span class="c-n92bdn c-mb8mk cybjsex ccjwpg7" data-tab-for="benefit-4">Relax and Recover</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo c-crbsvi ctduf03 c-b1p5ui c-aojzn2"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cck0jdd c-4au6wl c-468i9h cfr8k07" data-benefit="1"><video src="assets/-4712-4090-8ea9-2afd9344ee83.mp4" class="c-ix174f cgv08qg c-d7jzl0 cmpumhx c-4au6wl cr8hj72" loading="lazy"></video><img src="assets/9cac08cc14daad15aa727ef5e2e6365b.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c5hquwg crawej4" loading="lazy"/><img src="assets/521dd89112aac1ff5df4d3f4fb4a2f3c.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c-dr2ukv cnep73t" loading="lazy"/></div><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cck0jdd c-4au6wl c-468i9h cfr8k07" data-benefit="2"><video src="assets/-5276-41ac-9f78-85697e3d8b25.mp4" class="c-ix174f cgv08qg c-d7jzl0 cmpumhx c-4au6wl cr8hj72" loading="lazy"></video><img src="assets/9cac08cc14daad15aa727ef5e2e6365b.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c5hquwg crawej4" loading="lazy"/><img src="assets/521dd89112aac1ff5df4d3f4fb4a2f3c.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c-dr2ukv cnep73t" loading="lazy"/></div><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cck0jdd c-4au6wl c-468i9h cfr8k07" data-benefit="3"><video src="assets/-896c-47a4-b6c8-b2db76bdf195.mp4" class="c-ix174f cgv08qg c-d7jzl0 cmpumhx c-4au6wl cr8hj72" loading="lazy"></video><img src="assets/9cac08cc14daad15aa727ef5e2e6365b.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c5hquwg crawej4" loading="lazy"/><img src="assets/521dd89112aac1ff5df4d3f4fb4a2f3c.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c-dr2ukv cnep73t" loading="lazy"/></div><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cck0jdd c-4au6wl c-468i9h cfr8k07" data-benefit="4"><video src="assets/video-temp.mp4" class="c-ix174f cgv08qg c-d7jzl0 cmpumhx c-4au6wl cr8hj72" loading="lazy"></video><img src="assets/9cac08cc14daad15aa727ef5e2e6365b.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c5hquwg crawej4" loading="lazy"/><img src="assets/521dd89112aac1ff5df4d3f4fb4a2f3c.png" class="c1use2u cjmgjye c-d7jzl0 cmptzie ctfmc74 c-dr2ukv cnep73t" loading="lazy"/></div></div><div class="c-lc9846 c-o6hhdg c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-4aoy6u cxds8az c6tnw1b c-kkk0uw cfms42u"><video src="assets/-4712-4090-8ea9-2afd9344ee83.mp4" class="c-hi7sxz cjmgjye c-d7jzl0 cd8qtuv c6tnw1b cfksdas c-pekb6d" loading="lazy"></video><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c5ebccj c7e7cj7 cxds8az c-6s5fkd c1kzpo2 cbuvhjn c-ohjtqh ckyhy7i c-x8zsop c-fydbuh c6tnw1b"><img src="assets/9cac08cc14daad15aa727ef5e2e6365b.png" class="c-hi7sxz cjmgjye c-d7jzl0 c8n8f1 cd8qtuv c9dxkwx c-pekb6d" loading="lazy"/><img src="assets/521dd89112aac1ff5df4d3f4fb4a2f3c.png" class="c-hi7sxz cjmgjye c-d7jzl0 c8n8f1 cd8qtuv c9dxkwx c-pekb6d" loading="lazy"/></div></div></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-6s5fkd c1kzpo2"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera"><span class="c-kqesl cybkfeg cxmodm7 c-n92bdn c-jokuzw ctwrg49">Setting a New Standard of Wellness</span><span class="c-n92bdn c-m8oog cybhvgc c-jp2qmo ctw5qkb">The #1 health tracker at your fingertips.</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s cpt196w c-i9vfpo c-mb8mk cxmodm7 cybjsex c-evftdq cnyq4y5 c2u2kz6 c-lyy4od"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera cdtq9ip cnzx5hm c-crbsvi ctduf03 c-jp6kju cxtz8mo c1w7yre ctw4gl9"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cxb9ifj cnkzvdv"><span class="c-n92bdn cxmodm7 ctw4gl9">Discreet Design</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cxb9ifj cnkzvdv"><span class="c-n92bdn ctw4gl9">Accurate Results</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><span class="c-n92bdn ctw4gl9">Fast Charging Speed</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cxb9ifj"><span class="c-n92bdn ctw4gl9">Battery Life</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><span class="c-n92bdn ctw4gl9">Water Resistance</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cxb9ifj cnkzvdv"><span class="c-n92bdn ctw4gl9">In-app Data Analysis</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo c-b1u9qq cixnl4f cnkzvdv cxb9ifj"><span class="c-n92bdn ctw4gl9">Durable and Comfortable</span></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-bag87s c-ix49lw c-mb4rpv cyn51s8 cmpa6x1 c-crbsvi ctduf03 c-4au6wl cnx0fn2 c8mgzc c9dwa76"><img src="assets/vital-health-ring-icon.webp" class="c-hi7sxz cjmgjye c-d7jzl0 c-75arrj ctfmc74 coiioin ch82r2w cjyj6jl c-rej8eb" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo c-4au6wl cz02kxo c-msh9t cun148d c-6s5fkd c1kzpo2"><span class="c-n92bdn c-msh9t c-jp40lq c7e7cj7">Vital Health Ring</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo cixnl4f cfvxcbd csb16kq cnvgvs5 c-xwzdkv cnkzvdv cxb9ifj"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0 csb16kq" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo csb16kq cfvxcbd cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo cfvxcbd csb16kq cixnl4f cxb9ifj cnkzvdv"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo cfvw2cb csb16kq c-b1u9qq cixnl4f cxb9ifj"><img src="assets/Group.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-ix3r2j c-crbsvi ctduf03 cnwmdxg c-4au6wl c8mgzc ctxb14g c9dwa76"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-i9vfpo c-4au6wl c-1vttgr c-lyuar7"><img src="assets/205fa2f01c60bb55649259e2cc48004a.png" class="c-i5ddzv cjmgjye c-d7jzl0 ctfmc74 cq10fwz cohf3bx c7hlt2a" loading="lazy"/><span class="c-n92bdn c-msh9t cz02kxo">Competitor</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-gx6u2y cfvxcbd csb16kq cixnl4f cxb9ifj cnkzvdv"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvxcbd csb16kq cixnl4f cnkzvdv cxb9ifj"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-i9vfpo cfvw2cb csb16kq c-b1u9qq cixnl4f c-7hadx2 cxb9ifj"><img src="assets/Group%201970.svg" class="c-i84cyo cjmgjye c-d7jzl0" loading="lazy"/></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s cw8uyhy c7e7cj7 c-6s5fkd c1kzpo2 c-4aoy6u"><button class="c-lc9846 c-oaxxat cevei02 c-rri4mx cjti641 c-jaytv5 c-sc1q4l c-z1rj74 ccdkvsh cgt2htg cwzv3pd cey0ojg cmtuajo ch8wzy4 c-i9vfpo c-evftdq c7l9c6s c-4au6wl c-kfiytm c-mb5epe ca9vwz4 c-4aoy6u c8p4mx cguwjkm cfms42u cai6sxh" data-cta-button=""><span class="c-ls30q cey0ojg c-v947c4 cybkfeg csdhym c-jolhzf ctwo96m cmmlwk5">Save 50% Now</span><img src="assets/arrow-sm-right-svgrepo-com.svg" class="c-i8nx4x ciw0frg c-d7jzl0 c-6khkbl ctfmc74 cnci0qd c-mb5epe ca9vwz4" loading="lazy"/></button><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c7l9c6s cvtftzx c-6s5fkd c1kzpo2 c-4aoy6u cf9qybc cfms42u"><img src="assets/pseudo.webp" alt="Image header" class="c-hu1iqn c6hn9im c-d7jzl0 c6yq6k4" id="1" loading="lazy"/><span class="c-fi10o0">Ships by 22nd December</span><img src="assets/time.webp" alt="Image header" class="c-we1g7s c6iqupc c-d7jzl0 c-wdpes" id="1" loading="lazy"/><span class="c-fi10o0">Stock: Only 58 Vital Health Rings Left!</span></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-3n4ynq c-crbsvi ctduf03 c-kiwseq"><span class="c-n92bdn cxmodm7 c-kqesl cybkfeg c-jolhzf">Why Choose Vital Health Ring?</span><div class="review-section c-lc9846 c-oaxxat c-rri4mx cevei02 c-a4oera c-ic30jh cybhvgc c-5pdfmv c-crbsvi ctduf03 cb30v7x c-tqu0hl c5ebccj c2r04j0"><div class="review c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-ic30jh c7l9c6s cb447zj c-crbsvi ctduf03 c-1vttgr c-k1hfkf"><img src="assets/Mao_Anel_1.jpg" alt="Image header" class="c-bo14yd cw36n9a c-d7jzl0 c-9sljs7 cmptzie cgb5acr c-g5papx c-ykpa5g c-xempt3 c-2dppsr" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-6nisy2 c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-hou3zo c8q8of c-xempt3 cuhz3h5"><span class="c-maln1 cybkfeg c-n92bdn cxmodm7 c-voes68 ctw5qkb">It's really easy to use</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 cybhvgc c-mbvm3"><span class="c-n92bdn cyqfjjo c-mbvm3">“Measurements are accurate. Even though</span><span class="c-n92bdn cyqfjjo c-mbvm3">it had instructions, they weren't needed.</span><span class="c-n92bdn cyqfjjo c-mbvm3">Even with a smart watch, I have a feeling</span><span class="c-n92bdn cyqfjjo c-mbvm3">that now I have this ring, it will probably</span><span class="c-n92bdn cyqfjjo c-mbvm3">start being my main source of tracking</span><span class="c-n92bdn cyqfjjo c-mbvm3">over the watch.”</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-aop3ja c-b1u9qq ctduf03 c-crbsvi c-hou3zo cb57t69 cnkzvdv c-y2u18x"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera cb447zj c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-vlvq64"><img src="assets/Ellipse%2056.png" class="c-i5xl5n cjmgjye c-d7jzl0" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 cb3kfe6"><span class="c-mbvm3 cybkfeg">Linda C.</span><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera cruts0f c-aop3ja c-b1u9qq c-crbsvi ctduf03"><img src="assets/Vector%20(1).svg" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-mvo7g c-wmg8nx">Verified Customer</span></div></div></div><img src="assets/five-strars-icon.webp" class="c-i5ddzv cjmgjye c-d7jzl0 cms8v4l c570edc c-4aoy6u" loading="lazy"/></div></div></div><div class="review c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-ic30jh c7l9c6s cb447zj c-crbsvi ctduf03 cc325bb"><img src="assets/dc97a3bcbcba2ea6a72d41f6a310a703.jpg" alt="Image header" class="c-bo14yd cw36n9a c-d7jzl0 cv4ctcs cmptzie cgb5acr c-ykpa5g c-g5r7oi c-2dppsr" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c80vh9z c-b1u9qq c-aop3ja c-crbsvi ctduf03 c-hou3zo c8q8of c-xempt3 cuhz3h5"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja c-b1u9qq ctduf03 c-crbsvi cxmodm7"><span class="c-mb8mk cybkfeg cjz719g c-voes68 ctw5qkb">The readings are spot-on and</span><span class="c-n92bdn cybkfeg c-mb8mk">incredibly detailed!</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera cyqfjjo c-mbvm3 cybhvgc c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="c-n92bdn c-mbvm3">“This ring works great! Now I keep a daily</span><span class="c-n92bdn c-mbvm3">record of my main health indicators. Battery</span><span class="c-n92bdn c-mbvm3">lasts several days. The only issue is that I</span><span class="c-n92bdn c-mbvm3">can't buy another magnet charger.”</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-aop3ja c-crbsvi ctduf03 c-b1u9qq c-hou3zo crusi1d c-y2u18x cnkzvdv c-d59w2c"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 cb447zj c-vlvq64"><img src="assets/Ellipse%2056%20(2).png" alt="Image header" class="c-i5xl5n c-d7jzl0 c-6khkbl ciyqrqq" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03"><span class="c-n92bdn cybkfeg c-maln1">Jack P.</span><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-aopbye c-b1u9qq c-crbsvi ctduf03 cruts0f"><img src="assets/Vector%20(1).svg" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-n92bdn c-mvo7g c-wmg8nx">Verified Customer</span></div></div></div><img src="assets/five-strars-icon.webp" class="c-i5ddzv cjmgjye c-d7jzl0 c-4aoy6u c-vlvq6z cms8v4l c570edc" loading="lazy"/></div></div></div><div class="review c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-hou3zo c7l9c6s c-crbsvi ctduf03 cnvgvs5 cck0jdd cb447zj"><img src="assets/82ade9dbd6f45169dee980be89deb0fa.jpg" alt="Image header" class="c-bo14yd cw36n9a c-d7jzl0 c-9sljs7 cmptzie cgb5acr c-ykpa5g c-g5r7oi c-2dppsr" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c80vh9z c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-sx1vvb c8q8of c-xempt3 cuhz3h5"><span class="c-n92bdn c-mbvm3 cybkfeg cxmodm7">I’m feeling better than ever</span><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s c-b1u9qq c-crbsvi c-mbvm3 cyqfjjo c-aop3ja ctduf03 c-xempt3 ctw7niw"><span class="c-mb8mk cjz719g c-voes68 ctw7niw">“This has been a great item so far for</span><span class="c-n92bdn ctw7niw">tracking sleep, steps, stress, heart rate</span><span class="c-n92bdn">and other stuff. It's very easy to set up,</span><span class="c-n92bdn">long battery life and charging takes no</span><span class="c-n92bdn">time at all.”</span></div><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-hou3zo c-aop3ja c-b1u9qq c-crbsvi ctduf03 cb57t69 cnkzvdv c-y2u18x"><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 cb447zj c-vlvq64 c-y3dtua"><img src="assets/Ellipse%2056%20(1).png" alt="Image header" class="c-i5xl5n ciyqrqq c-d7jzl0 c-6khkbl" id="1" loading="lazy"/><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-aop3ja c-b1u9qq ctduf03 c-crbsvi"><span class="c-chr53o c-maln1 cybkfeg">Pam A.</span><div class="c-lc9846 c-oaxxat c-rri4mx cevei02 c7l9c6s c-a4oera cruts0f c-aop3ja c-b1u9qq ctduf03 c-crbsvi"><img src="assets/Vector%20(1).svg" class="c-hi7sxz cjmgjye c-d7jzl0" loading="lazy"/><span class="c-mwb6z c-wmg8nx">Verified Customer</span></div></div></div><img src="assets/five-strars-icon.webp" alt="Image header" class="c-i5ddzv c-d7jzl0 c-v0br6m c-img9rw c-4aoy6u c-vlvq6z cms8v4l c570edc c-2g2jyu" id="1" loading="lazy"/></div></div></div></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx cbk0zbb c7l9c6s c45vmlf cnx2mud"><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-3n63zq c-xempt3 c-kixfe9 c-6s4sku c1l0cnl c-q05l3p"><span class="c-n92bdn c-o6hhdg cblmt4n c-jp4nl9 c-vf9b1s c2zsyt0 c6yq6k4 c-ehlcw8">WE’VE GOT ALL THE ANSWERS</span><span class="c-la7dy cybkfeg cgt2htg cwzv3pd c-jo49c6 cjz719g c-vf9b1s c-kd3imu cx351yt ccw0nr1">Vital Health Ring FAQs</span></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c-b6rfq cx6zd46 c9b8lem"><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx czfsfdv cfvz99y cwtclh4 c-3n4ynq c-lkia1r cuo0vhx c-hou3zo c-tqu0hl c-1vttgr c2u4hxr c-fydbuh cuhz3h5 cnkvnbf c-ehlcw8 cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera ctduf03 c-aop3ja c-crbsvi c-b1u9qq c5ebccj cxds8az c-1vttgr c-x8zsop c-fydbuh c6tnw1b cuhz3h5" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">How long does shipping take?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-hi7sxz cjmgjye c-d7jzl0 c-o6hhdg c6yq6k4 c7femou cxa5x8t c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx czfsfdv c-lkia1r cfvz99y c-3n4ynq cwtclh4 c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">How does the money-back guarantee work?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx cfvz99y czfsfdv c-lkia1r cwtclh4 c-3n4ynq c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">How accurate is the Vital Health Ring?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx cfvz99y czfsfdv c-lkia1r c-3n4ynq cwtclh4 c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja c-crbsvi c-b1u9qq ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">How does the Vital Health Ring work?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx cfvz99y czfsfdv c-lkia1r c-3n4ynq cwtclh4 c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-b1u9qq c-aop3ja c-crbsvi ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">What features does the Vital Health Ring offer?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx cfvz99y czfsfdv cbjf2lb c-3n4ynq cwtclh4 c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-b1u9qq c-aop3ja c-crbsvi ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">How do I set up the Vital Health Ring?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx cfvz99y czfsfdv c-lkia1r c-3n4ynq cwtclh4 c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-b1u9qq c-crbsvi c-aop3ja ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">Is the Vital Health Ring compatible with my smartphone?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 cq10fwz cxpk1f6 c-rri4mx cfvz99y czfsfdv cxo9jnp c-3n4ynq cwtclh4 c-hou3zo c-5pdfmv cuo0vhx c-tqu0hl c2u4hxr c-fydbuh cuhz3h5 cnkvnbf cxd973x c5gp6j9 cp0kwla" data-expandable-element=""><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c-aop3ja c-b1u9qq c-crbsvi ctduf03 c-i9vfpo c5ebccj cxds8az c-x8zsop c-fydbuh" data-expandable-trigger="1"><span class="c-md5l5 cybkfeg c-i9vfpo c-jp2qmo c8q8of c9e0ovs cx223rm ccw00ri">Can I wear the ring while swimming or showering?</span><img src="assets/bb77a663596a12c43afb85e116889428.png" class="c-i8o5k1 ciw07cc c-d7jzl0 c-o6hhdg c6yq6k4 c6uv66y cflepu9 c-ehlcw8" loading="lazy"/><div class="c-i9vfpo c-u6bap8 c-pzcuxk cuo370x c-cgp2b4 c-mb61ox c-63hydz cf4pxvt c-o6hhdg"><label htmlFor="" key="">
+            <input
+              type="checkbox"
+              id=
+              value=
+              false
+            />
+            
+          </label></div></div><div class="transition-all c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c-5pdfmv c-a4oera c-crbsvi ctduf03 c-i9vfpo" data-expandable-area=""><span class="c-n92bdn">"Text Component" - click here to edit!</span></div></div><div class="c-lc9846 c-oaxxat cxpk1f6 c-rri4mx c7l9c6s cw8uyhy c7e7cj7 c-6s5fkd c1kzpo2"><a class="c-lc9846 c-oaxxat cevei02 c-rri4mx cjti641 c-jaytv5 c-sc1q4l c-z1rj74 ccdkvsh cgt2htg cwzv3pd cey0ojg cmtuajo ch8wzy4 c-i9vfpo c-evftdq c7l9c6s c-4au6wl c-kfiytm c-mb5epe ca9vwz4 c-468i9h cfr8k07 cai6sxh" data-cta-button=""><span class="c-ls30q cey0ojg c-v947c4 cybkfeg csdhym c-jp5aks ct01zqz cmmlwk5">Save 50% Now</span><img src="assets/arrow-sm-right-svgrepo-com.svg" class="c-i8nx4x ciw0frg c-d7jzl0 c-6khkbl ctfmc74 cnci0qd c-mb5epe ca9vwz4" loading="lazy"/></a><div class="c-lc9846 c-oaxxat cevei02 c-rri4mx c7l9c6s cvtftzx c-6s5fkd c1kzpo2 c-468i9h cf9qybc cfr8k07"><img src="assets/pseudo.webp" alt="Image header" class="c-hu1iqn c6hn9im c-d7jzl0" id="1" loading="lazy"/><span class="c-fi10o0">Ships by 22nd December</span><img src="assets/time.webp" alt="Image header" class="c-we1g7s c6iqupc c-d7jzl0 c-wdpes" id="1" loading="lazy"/><span class="c-fi10o0">Stock: Only 58 Vital Health Rings Left!</span></div></div></div></div><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera cny6ccs c-b1t86s"><img src="assets/vital-logo.webp" class="ciyr6b5 c-d7jzl0 cpf4zja cv4ctcs c-i5ddzv c-b1u9qq c-ljw5xe cg8ebdy c-yojuaz" id="4" loading="lazy"/><span class="c-n92bdn cblmt4n">Terms &amp; Conditions | Privacy Policy |&nbsp;Contact Us |&nbsp;Affiliate</span><span class="c-n92bdn cblmt4n">©2025 Vital Health Ring. All Rights Reserved.</span><div class="c-lc9846 c-oaxxat c-rri4mx cxpk1f6 c7l9c6s c-a4oera c24pc60"><span class="c-n92bdn c-aop3ja c24pc60 c-mv17x">This agreement may be updated to reflect changes to our information practices. In the event any changes are made, we will notify</span><span class="c-n92bdn c24pc60 c-mv17x">you via email and/or post an announcement on our site. We recommend you periodically review this page for the latest information</span><span class="c-n92bdn c-mv17x">on our Terms &amp; Conditions. If you do not agree to the changes made, please terminate your registration with USS by notifying USS</span><span class="c-n92bdn c-mv17x">immediately. You can determine when this agreement was last revised by checking the “last updated” legend at the top of this policy.</span></div></div></div></div><script src="https://stdigitalmvmtdev001.blob.core.windows.net/libs/mvmt-latest.develop.js.min.js"></script><script src="scripts/landing.js"></script><script>Array.from(document.querySelectorAll('img')).forEach(e => {
+  if (!e.src.includes('assets')) {
+    e.src = e.src.replace(/(.+)(\/{1}\D+)/, '$1/assets$2');
+  }
+});</script><script>document.addEventListener("DOMContentLoaded", () => {
+  const expandableElements = Array.from(
+    document.querySelectorAll("[data-expandable-element]")
+  );
+  if (expandableElements.length === 0) return;
+
+  const shouldExpand = (checkboxDiv, checkbox) => {
+    if (Number(checkboxDiv.dataset.expandableTrigger)) {
+      return checkbox.checked;
+    }
+    return !checkbox.checked;
+  };
+
+  const toggleExpandableArea = (element, checkboxDiv, checkbox) => {
+    const elementStyle = element.style;
+    if (shouldExpand(checkboxDiv, checkbox)) {
+      const elementStyle = element.style;
+      elementStyle.paddingBlock = "1rem";
+      elementStyle.maxHeight = element.scrollHeight * 1.5 + "px";
+      elementStyle.overflow = "visible";
+    } else {
+      const elementStyle = element.style;
+      elementStyle.maxHeight = 0;
+      elementStyle.overflow = "hidden";
+      elementStyle.paddingBlock = 0;
+    }
+  };
+
+  expandableElements.forEach((expandableElement) => {
+    const element = expandableElement.querySelector(
+      "[data-expandable-area]"
+    );
+    const checkboxDiv = expandableElement.querySelector(
+      "[data-expandable-trigger]"
+    );
+    const checkbox = checkboxDiv.querySelector("input");
+    checkboxDiv.addEventListener("click", () => checkbox.click());
+
+    element.style.flexWrap = "nowrap";
+    toggleExpandableArea(element, checkboxDiv, checkbox);
+
+    checkbox.addEventListener("click", () => {
+      toggleExpandableArea(element, checkboxDiv, checkbox);
+    });
+  });
+});</script><script>const benefits = document.querySelectorAll("[data-benefit]");
+const tabs = document.querySelectorAll("[data-tab-for]");
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    benefits.forEach((benefit) => (benefit.style.display = "none"));
+    tabs.forEach((tab) => tab.classList.remove("active-tab"));
+    tab.classList.add("active-tab");
+    const tabFor = tab.dataset.tabFor;
+    const benefit = document.querySelector(
+      `[data-benefit="${tabFor.split("-")[1]}"]`
+    );
+    if (benefit) benefit.style.display = "flex";
+  });
+});</script>
+<script type="application/json" id="page-config">
+{
+  "campaignId": "39",
+  "pageType": "LandingPage",
+  "funnelId": "69b96874a6252bab6d955c39"
+}
+</script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        const cookiesBanner = document.querySelector("[data-cookie-banner]");
+        const cookieAcceptButton = document.querySelector("[data-cookie-accept-button]");
+        const cookieRejectButton = document.querySelector("[data-cookie-reject-button]");
+
+        if (!(cookiesBanner && cookieAcceptButton && cookieRejectButton)) return;
+
+        const cookieDependentScripts = [];
+        const cookiesAnswer = sessionStorage.getItem("cookiesAnswer");
+
+        if (cookiesAnswer === "accepted" || cookiesAnswer === "rejected") {
+          cookiesBanner.style.display = "none";
+          injectTrackingScripts();
+        } else {
+          cookiesBanner.style.display = "flex";
+        }
+
+        cookieAcceptButton.addEventListener("click", () => {
+          sessionStorage.setItem("cookiesAnswer", "accepted");
+          cookiesBanner.style.display = "none";
+          if (cookieDependentScripts.length > 0) injectTrackingScripts()
+        });
+
+        cookieRejectButton.addEventListener("click", () => {
+          sessionStorage.setItem("cookiesAnswer", "rejected");
+          cookiesBanner.style.display = "none";
+        });
+
+        function injectTrackingScripts() {
+          cookieDependentScripts.forEach((script) => {
+            if (script.src) {
+              const scriptElement = document.createElement("script");
+              scriptElement.src = script.src;
+              scriptElement.async = true;
+              document.head.appendChild(scriptElement);
+            } else if (script.text) {
+              const scriptElement = document.createElement("script")
+              scriptElement.innerHTML = script.text;
+              document.head.appendChild(scriptElement);
+            }
+          })
+        }
+      }, 500);
+    });
+  </script>
+  </body></html>
