@@ -625,7 +625,7 @@ async function createOrderViaWallet(confirmationToken, paymentMethodId) {
         ?.getAttribute("data-shipping-profile-id") || undefined;
 
   const orderData = {
-    pageId: "7xgUC9dtHul03dCv8iXO3eRVB3FcCCRoksyGLFnxMFX6I4J9kTLve3aMwnx1hHKy",
+    pageId: "KdK_jN0ZLz0hdVX_uK8SGkNWyZ0HpCTNPZTGXcuw3-d-3zQAqUzWaGblyAw8H20T",
     action: "process",
     campaign_id: CAMPAIGN_ID,
     connection_id: 1,
@@ -1412,7 +1412,7 @@ async function createOrderViaPaypal(isExpress = false) {
   const shippingProfileId = +document.querySelector(`[data-product-id="${selectedProduct.id}"]`)?.getAttribute('data-shipping-profile-id') || undefined;
   const sameAddress = isSameAddress();
   const orderData = {
-    pageId: "7xgUC9dtHul03dCv8iXO3eRVB3FcCCRoksyGLFnxMFX6I4J9kTLve3aMwnx1hHKy",
+    pageId: "KdK_jN0ZLz0hdVX_uK8SGkNWyZ0HpCTNPZTGXcuw3-d-3zQAqUzWaGblyAw8H20T",
     action: "process",
     campaign_id: CAMPAIGN_ID,
     connection_id: 1, // VRIO URL ending /connection
@@ -1429,7 +1429,7 @@ async function createOrderViaPaypal(isExpress = false) {
     bill_fname: billingFirstName || firstName,
     bill_lname: billingLastName || lastName,
     bill_address1: billingAddress1 || shippingAddress1,
-    bill_address2: billingAddress2 || shippingAddress2,
+    bill_address2: billingAddress2,
     bill_city: billingCity || shippingCity,
     bill_state: normalizedBillState || normalizedShipState,
     bill_zipcode: billingZip || shippingZip,
@@ -1710,7 +1710,7 @@ async function createOrderViaKlarna() {
   const sameAddress = isSameAddress();
 
   const orderData = {
-    pageId: "7xgUC9dtHul03dCv8iXO3eRVB3FcCCRoksyGLFnxMFX6I4J9kTLve3aMwnx1hHKy",
+    pageId: "KdK_jN0ZLz0hdVX_uK8SGkNWyZ0HpCTNPZTGXcuw3-d-3zQAqUzWaGblyAw8H20T",
     campaign_id: CAMPAIGN_ID,
     connection_id: 1,
     email: email,
@@ -1726,7 +1726,7 @@ async function createOrderViaKlarna() {
     bill_fname: billingFirstName || firstName,
     bill_lname: billingLastName || lastName,
     bill_address1: billingAddress1 || shippingAddress1,
-    bill_address2: billingAddress2 || shippingAddress2,
+    bill_address2: billingAddress2,
     bill_city: billingCity || shippingCity,
     bill_state: normalizedBillState || normalizedShipState,
     bill_zipcode: billingZip || shippingZip,
@@ -2088,7 +2088,7 @@ async function createOrderViaCreditCard() {
   let orderTotal = Math.max(0, Number(selectedProduct.price) * selectedProduct.quantity);
 
   const orderData = {
-    pageId: "7xgUC9dtHul03dCv8iXO3eRVB3FcCCRoksyGLFnxMFX6I4J9kTLve3aMwnx1hHKy",
+    pageId: "KdK_jN0ZLz0hdVX_uK8SGkNWyZ0HpCTNPZTGXcuw3-d-3zQAqUzWaGblyAw8H20T",
     action: "process",
     campaign_id: CAMPAIGN_ID,
     connection_id: 1, // VRIO URL ending /connection
@@ -2108,7 +2108,7 @@ async function createOrderViaCreditCard() {
     bill_fname: billingFirstName || firstName,
     bill_lname: billingLastName || lastName,
     bill_address1: billingAddress1 || shippingAddress1,
-    bill_address2: billingAddress2 || shippingAddress2,
+    bill_address2: billingAddress2,
     bill_city: billingCity || shippingCity,
     bill_state: normalizedBillState || normalizedShipState,
     bill_zipcode: billingZip || shippingZip,
@@ -4129,7 +4129,7 @@ async function returnPaypal() {
 ;
 
     const body = {
-        pageId: "7xgUC9dtHul03dCv8iXO3eRVB3FcCCRoksyGLFnxMFX6I4J9kTLve3aMwnx1hHKy",
+        pageId: "KdK_jN0ZLz0hdVX_uK8SGkNWyZ0HpCTNPZTGXcuw3-d-3zQAqUzWaGblyAw8H20T",
         action: "process",
         campaign_id: CAMPAIGN_ID,
         connection_id: 1,
@@ -4618,12 +4618,14 @@ function handleFreeGiftParam(allProducts) {
         }
       });
 
-      if (isTenBucksDiscount) {
-        currentProduct.price =
-          (currentProduct.price * currentProduct.quantity - 10) / currentProduct.quantity;
-      } else {
-        currentProduct.price =
-          currentProduct.price - (currentProduct.price * discountPercent) / 100;
+      if (currentProduct) {
+        if (isTenBucksDiscount) {
+          currentProduct.price =
+            (currentProduct.price * currentProduct.quantity - 10) / currentProduct.quantity;
+        } else {
+          currentProduct.price =
+            currentProduct.price - (currentProduct.price * discountPercent) / 100;
+        }
       }
 
       const discountContainers = document.querySelectorAll(
@@ -4787,8 +4789,9 @@ function handleFreeGiftParam(allProducts) {
         if (shouldSkipRecurring && isRecurringByProductId(productObject.id)) {
           return;
         }
-        hasItems = true;
         const product = prices.find((p) => p.id === Number(productObject.id));
+        if (!product) return;
+        hasItems = true;
         const productElement = getProductElement(productObject.id);
         const customName =
           productElement.dataset.customProductName ||
